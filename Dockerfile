@@ -42,8 +42,8 @@ WORKDIR /app
 # - Esto hace los builds mucho más rápidos
 # - Esto hace los builds mucho más rápidos
 #
-#INSTALAR PARA PRODUCCION
-RUN apt-get update && apt-get install -y \ curl \ && rm -rf /var/lib/apt/lists/*
+# INSTALAR PARA PRODUCCION
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 COPY requirements.txt .
 # Actualizar pip y instalar dependencias
 # --no-cache-dir: No guarda cache de pip (imagen más pequeña)
