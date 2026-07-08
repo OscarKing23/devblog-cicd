@@ -87,21 +87,12 @@ def selenium_driver():
     # En GitHub Actions y otros entornos CI necesitamos modo headless
     if os.getenv('GITHUB_ACTIONS') or os.getenv('CI'):
         chrome_options.add_argument('--headless=new')
-    chrome_options.add_argument('--no-sandbox')
-    chrome_options.add_argument('--disable-dev-shm-usage')
-    chrome_options.add_argument('--disable-gpu')
     chrome_options.add_argument('--window-size=1920,1080')
     chrome_options.add_argument('--disable-extensions')
-    chrome_options.add_argument('--disable-infobars')
-    chrome_options.add_argument('--disable-background-networking')
-    chrome_options.add_argument('--disable-browser-side-navigation')
     chrome_options.add_argument('--disable-popup-blocking')
-    chrome_options.add_argument('--hide-scrollbars')
-    chrome_options.add_argument('--remote-debugging-port=9222')
-    chrome_options.add_argument('--disable-software-rasterizer')
-    chrome_options.add_argument('--disable-dev-tools')
-    chrome_options.add_argument('--single-process')
-    chrome_options.add_argument('--no-zygote')
+    chrome_options.add_argument('--disable-gpu')
+    chrome_options.add_argument('--no-sandbox')
+    chrome_options.add_argument('--disable-dev-shm-usage')
 
     chrome_driver_path = ChromeDriverManager().install()
     # webdriver_manager puede devolver una ruta a un archivo dentro del directorio
