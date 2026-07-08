@@ -62,143 +62,143 @@ jobs:
           path: coverage.xml
           retention-days: 30
   
-# ================================
-# JOB 2: E2E TESTING (NUEVO)
-# ================================
-e2e-tests:
-  name: E2E Tests with Selenium
-  runs-on: ubuntu-latest
-  needs: test # Solo ejecutar si tests unitarios pasan
-  steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+  # ================================
+  # JOB 2: E2E TESTING (NUEVO)
+  # ================================
+  e2e-tests:
+    name: E2E Tests with Selenium
+    runs-on: ubuntu-latest
+    needs: test # Solo ejecutar si tests unitarios pasan
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up Python ${{ env.PYTHON_VERSION }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
 
-    - name: Install Chrome browser
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y google-chrome-stable
+      - name: Install Chrome browser
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
 
-    - name: Install Python dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
-    - name: Run E2E tests
-      run: |
-        pytest tests/test_e2e_basic.py -v --tb=short
-      env:
-        DISPLAY: :99
+      - name: Run E2E tests
+        run: |
+          pytest tests/test_e2e_basic.py -v --tb=short
+        env:
+          DISPLAY: :99
 
-    - name: Upload E2E screenshots on failure
-      uses: actions/upload-artifact@v4
-      if: failure()
-      with:
-        name: e2e-screenshots
-        path: "*.png"
-        retention-days: 7
+      - name: Upload E2E screenshots on failure
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: e2e-screenshots
+          path: "*.png"
+          retention-days: 7
 
 
-# JOB 2: DOCKER BUILD
-# ============
-docker-build:
-  name: Build Docker Image
-  runs-on: ubuntu-latest
-  needs: [test, e2e-tests] # Esperar ambos tipos de tests
-  steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+  # JOB 2: DOCKER BUILD
+  # ============
+  docker-build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: [test, e2e-tests] # Esperar ambos tipos de tests
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-    # Construcción de la imagen asignando tags (incluido el hash del commit actual)
-    - name: Build Docker image
-      run: |
-        docker build -t devblog:${{ github.sha }} .
-        docker build -t devblog:latest .
+      # Construcción de la imagen asignando tags (incluido el hash del commit actual)
+      - name: Build Docker image
+        run: |
+          docker build -t devblog:${{ github.sha }} .
+          docker build -t devblog:latest .
 
-    # Validación funcional: Corre el contenedor y verifica respuestas HTTP
-    - name: Test Docker image
-      run: |
-        docker run -d -p 5000:5000 --name test-container devblog:latest
-        sleep 15
-        curl -f http://localhost:5000/ || exit 1
-        curl -f http://localhost:5000/api/posts || exit 1
-        docker stop test-container
-        docker rm test-container
+      # Validación funcional: Corre el contenedor y verifica respuestas HTTP
+      - name: Test Docker image
+        run: |
+          docker run -d -p 5000:5000 --name test-container devblog:latest
+          sleep 15
+          curl -f http://localhost:5000/ || exit 1
+          curl -f http://localhost:5000/api/posts || exit 1
+          docker stop test-container
+          docker rm test-container
 
-# JOB 3: SECURITY SCAN
-# ==================================
-security:
-  name: Security Scan
-  runs-on: ubuntu-latest
-  needs: test # Se ejecuta en paralelo con el build de Docker tras pasar los tests
-  steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+  # JOB 3: SECURITY SCAN
+  # ==================================
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: test # Se ejecuta en paralelo con el build de Docker tras pasar los tests
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
 
-    # Escaneo estático contra huecos de seguridad conocidos en dependencias y código
-    - name: Install security tools
-      run: |
-        pip install safety bandit
+      # Escaneo estático contra huecos de seguridad conocidos en dependencias y código
+      - name: Install security tools
+        run: |
+          pip install safety bandit
 
-    - name: Run safety check
-      run: |
-        safety check -r requirements.txt --json --output safetyreport.json || true
-        echo "Safety check completed"
+      - name: Run safety check
+        run: |
+          safety check -r requirements.txt --json --output safetyreport.json || true
+          echo "Safety check completed"
 
-    - name: Run bandit security linter
-      run: |
-        bandit -r app/ -f json -o bandit-report.json || true
-        echo "Bandit scan completed"
+      - name: Run bandit security linter
+        run: |
+          bandit -r app/ -f json -o bandit-report.json || true
+          echo "Bandit scan completed"
 
-    # Resguardo de reportes de vulnerabilidades (Actualizado a v4)
-    - name: Upload security reports
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: security-reports
-        path: |
-          safety-report.json
-          bandit-report.json
-        retention-days: 30
+      # Resguardo de reportes de vulnerabilidades (Actualizado a v4)
+      - name: Upload security reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-reports
+          path: |
+            safety-report.json
+            bandit-report.json
+          retention-days: 30
 
-# JOB 4: DEPLOYMENT SIMULADO
-# ================================
-deploy:
-  name: Deploy Notification
-  runs-on: ubuntu-latest
-  needs: [test, e2e-tests, docker-build, security]
-  if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-  steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+  # JOB 4: DEPLOYMENT SIMULADO
+  # ================================
+  deploy:
+    name: Deploy Notification
+    runs-on: ubuntu-latest
+    needs: [test, e2e-tests, docker-build, security]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Deploy notification
-      run: |
-        echo "All tests passed! Ready for deployment!"
-        echo "Test results: Passed"
-        echo "Docker build: Success"
-        echo "Security scan: Passed"
-        echo "Deployment would happen here..."
+      - name: Deploy notification
+        run: |
+          echo "All tests passed! Ready for deployment!"
+          echo "Test results: Passed"
+          echo "Docker build: Success"
+          echo "Security scan: Passed"
+          echo "Deployment would happen here..."
 
-    - name: Deployment Success
-      run: |
-        echo "All checks passed successfully!"
-        echo "Unit Tests: Passed"
-        echo "E2E Tests: Passed"
-        echo "Docker: Built and tested"
-        echo "Security: Scanned"
-        echo "Ready for production deployment!"
-        echo "Commit: ${{ github.sha }}"
-        echo "Branch: ${{ github.ref }}"
+      - name: Deployment Success
+        run: |
+          echo "All checks passed successfully!"
+          echo "Unit Tests: Passed"
+          echo "E2E Tests: Passed"
+          echo "Docker: Built and tested"
+          echo "Security: Scanned"
+          echo "Ready for production deployment!"
+          echo "Commit: ${{ github.sha }}"
+          echo "Branch: ${{ github.ref }}"
