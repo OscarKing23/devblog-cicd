@@ -78,23 +78,23 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Install Chrome browser (official repo)
+      - name: Install browser and X virtual framebuffer
         run: |
-          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
-          sudo sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list'
           sudo apt-get update
-          sudo apt-get install -y google-chrome-stable
+          sudo apt-get install -y chromium-browser chromium-chromedriver xvfb
 
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run E2E tests
+      - name: Run E2E tests (xvfb)
         run: |
-          pytest test/test_e2e_basic.py -v --tb=short
+          export CHROME_BIN=/usr/bin/chromium-browser
+          xvfb-run -a pytest test/test_e2e_basic.py -v --tb=short
         env:
           CI: true
+          CHROME_BIN: /usr/bin/chromium-browser
 
       - name: Upload E2E screenshots on failure
         uses: actions/upload-artifact@v4
