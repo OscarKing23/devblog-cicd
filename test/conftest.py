@@ -84,11 +84,20 @@ def flask_test_app():
 def selenium_driver():
     """Fixture que crea un driver de Chrome para testing"""
     chrome_options = Options()
-    # chrome_options.add_argument('--headless')
+    # En GitHub Actions y otros entornos CI necesitamos modo headless
+    if os.getenv('GITHUB_ACTIONS') or os.getenv('CI'):
+        chrome_options.add_argument('--headless=new')
     chrome_options.add_argument('--no-sandbox')
     chrome_options.add_argument('--disable-dev-shm-usage')
     chrome_options.add_argument('--disable-gpu')
     chrome_options.add_argument('--window-size=1920,1080')
+    chrome_options.add_argument('--disable-extensions')
+    chrome_options.add_argument('--disable-infobars')
+    chrome_options.add_argument('--disable-background-networking')
+    chrome_options.add_argument('--disable-browser-side-navigation')
+    chrome_options.add_argument('--disable-popup-blocking')
+    chrome_options.add_argument('--hide-scrollbars')
+
     chrome_driver_path = ChromeDriverManager().install()
     # webdriver_manager puede devolver una ruta a un archivo dentro del directorio
     # de descarga; buscamos el ejecutable correcto según el sistema.
@@ -108,6 +117,14 @@ def selenium_driver():
     if os.name != 'nt':
         st = os.stat(chrome_driver_path)
         os.chmod(chrome_driver_path, st.st_mode | stat.S_IEXEC)
+
+        # Usar Chromium en CI si está instalado
+        if os.path.exists('/usr/bin/chromium-browser'):
+            chrome_options.binary_location = '/usr/bin/chromium-browser'
+        elif os.path.exists('/usr/bin/chromium'):
+            chrome_options.binary_location = '/usr/bin/chromium'
+        elif os.path.exists('/usr/bin/google-chrome-stable'):
+            chrome_options.binary_location = '/usr/bin/google-chrome-stable'
 
     service = Service(chrome_driver_path)
     driver = webdriver.Chrome(service=service, options=chrome_options)

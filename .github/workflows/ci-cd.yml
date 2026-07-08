@@ -42,6 +42,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      # Paso 4.1: Instalar Chromium en Ubuntu para Selenium
+      - name: Install Chromium browser
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y chromium-browser
+
       # Paso 5: Ejecutar los tests con reporte de cobertura XML
       - name: Run tests with coverage
         run: |
@@ -55,6 +61,8 @@ jobs:
           name: coverage-report
           path: coverage.xml
           retention-days: 30
+  
+
 
   # JOB 2: DOCKER BUILD
   # ============
