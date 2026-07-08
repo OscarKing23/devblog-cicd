@@ -97,6 +97,11 @@ def selenium_driver():
     chrome_options.add_argument('--disable-browser-side-navigation')
     chrome_options.add_argument('--disable-popup-blocking')
     chrome_options.add_argument('--hide-scrollbars')
+    chrome_options.add_argument('--remote-debugging-port=9222')
+    chrome_options.add_argument('--disable-software-rasterizer')
+    chrome_options.add_argument('--disable-dev-tools')
+    chrome_options.add_argument('--single-process')
+    chrome_options.add_argument('--no-zygote')
 
     chrome_driver_path = ChromeDriverManager().install()
     # webdriver_manager puede devolver una ruta a un archivo dentro del directorio
