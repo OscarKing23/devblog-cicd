@@ -4,6 +4,7 @@ from app.models import blog_storage
 import threading
 import time
 import os
+import stat
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
@@ -102,6 +103,11 @@ def selenium_driver():
         if os.path.exists(candidate):
             chrome_driver_path = candidate
             break
+
+    # Asegurar permisos de ejecución en Linux/Unix
+    if os.name != 'nt':
+        st = os.stat(chrome_driver_path)
+        os.chmod(chrome_driver_path, st.st_mode | stat.S_IEXEC)
 
     service = Service(chrome_driver_path)
     driver = webdriver.Chrome(service=service, options=chrome_options)
