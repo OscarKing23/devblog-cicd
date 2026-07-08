@@ -90,15 +90,18 @@ def selenium_driver():
     chrome_options.add_argument('--window-size=1920,1080')
     chrome_driver_path = ChromeDriverManager().install()
     # webdriver_manager puede devolver una ruta a un archivo dentro del directorio
-    # de descarga; siempre debemos usar el ejecutable chromedriver.exe.
+    # de descarga; buscamos el ejecutable correcto según el sistema.
     if os.path.isdir(chrome_driver_path):
-        chrome_driver_path = os.path.join(chrome_driver_path, 'chromedriver.exe')
+        search_dir = chrome_driver_path
     else:
-        # Si la ruta devuelta es un archivo no ejecutable, buscamos el ejecutable
-        base_dir = os.path.dirname(chrome_driver_path)
-        chromedriver = os.path.join(base_dir, 'chromedriver.exe')
-        if os.path.exists(chromedriver):
-            chrome_driver_path = chromedriver
+        search_dir = os.path.dirname(chrome_driver_path)
+
+    executable_names = ['chromedriver.exe', 'chromedriver']
+    for exe_name in executable_names:
+        candidate = os.path.join(search_dir, exe_name)
+        if os.path.exists(candidate):
+            chrome_driver_path = candidate
+            break
 
     service = Service(chrome_driver_path)
     driver = webdriver.Chrome(service=service, options=chrome_options)
