@@ -121,6 +121,12 @@ def selenium_driver():
             chrome_options.binary_location = '/usr/bin/chromium'
         elif os.path.exists('/usr/bin/google-chrome-stable'):
             chrome_options.binary_location = '/usr/bin/google-chrome-stable'
+        elif os.path.exists('/usr/bin/google-chrome'):
+            chrome_options.binary_location = '/usr/bin/google-chrome'
+
+    # En entornos CI a veces ayuda exponer un puerto de depuración
+    if os.getenv('GITHUB_ACTIONS') or os.getenv('CI'):
+        chrome_options.add_argument('--remote-debugging-port=0')
 
     service = Service(chrome_driver_path)
     driver = webdriver.Chrome(service=service, options=chrome_options)
