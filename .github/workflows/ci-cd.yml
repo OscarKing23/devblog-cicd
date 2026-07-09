@@ -91,7 +91,7 @@ jobs:
       - name: Run E2E tests (xvfb)
         run: |
           export CHROME_BIN=/usr/bin/chromium-browser
-          xvfb-run -a pytest test/test_e2e_basic.py -v --tb=short
+          xvfb-run -a pytest testc/test_e2e_basic.py -v --tb=short
         env:
           CI: true
           CHROME_BIN: /usr/bin/chromium-browser
