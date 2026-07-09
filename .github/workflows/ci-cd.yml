@@ -81,7 +81,14 @@ jobs:
       - name: Install browser and X virtual framebuffer
         run: |
           sudo apt-get update
-          sudo apt-get install -y chromium-browser chromium-chromedriver xvfb
+          sudo apt-get install -y chromium chromium-chromedriver xvfb \
+            libnss3 libxss1 fonts-liberation libappindicator3-1 libatk-bridge2.0-0 libgtk-3-0
+          # Detect browser binary and expose it to the environment; create a fallback symlink
+          CHROME_PATH=$(which chromium || which chromium-browser || which google-chrome || true)
+          if [ -n "$CHROME_PATH" ]; then
+            echo "CHROME_BIN=$CHROME_PATH" >> $GITHUB_ENV
+            sudo ln -sf "$CHROME_PATH" /usr/bin/chromium-browser || true
+          fi
 
       - name: Install Python dependencies
         run: |
@@ -90,11 +97,9 @@ jobs:
 
       - name: Run E2E tests (xvfb)
         run: |
-          export CHROME_BIN=/usr/bin/chromium-browser
-          xvfb-run -a pytest testc/test_e2e_basic.py -v --tb=short
+          xvfb-run -a pytest test/test_e2e_basic.py -v --tb=short
         env:
           CI: true
-          CHROME_BIN: /usr/bin/chromium-browser
 
       - name: Upload E2E screenshots on failure
         uses: actions/upload-artifact@v4
